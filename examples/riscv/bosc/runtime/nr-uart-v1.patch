@@ -1,0 +1,34 @@
+--- a/nr_runtime.c
++++ b/nr_runtime.c
+@@ -196,6 +196,7 @@
+     uart_putc(digits[(value >> shift) & 15]);
+ }
+
++#include "uart_protocol.h"
+ #include "nr_console.inc"
+
+ #ifdef NR_HANG_DIAGNOSTICS
+@@ -280,6 +281,7 @@
+
+ __attribute__((noreturn)) void nr_nh_main(void) {
+   uart_init();
++  bosc_uart_start();
+   host_puts("\r\n[nr] NH boot; RA operator runtime\r\n[nr] RA entry=0x");
+   host_hex((uintptr_t)&_ra_start);
+   host_puts("\r\n");
+@@ -392,6 +394,7 @@
+   host_puts(" sp=0x");
+   host_hex(stack_pointer);
+   host_puts("\r\nverify NH: FAIL\r\n");
++  bosc_uart_trap(cause, pc, value);
+   halt();
+ }
+ __attribute__((noreturn)) void abort(void) {
+--- a/nr_console.inc
++++ b/nr_console.inc
+@@ -157,4 +157,5 @@
+   }
+   host_puts(result == 1 ? "[nr] RA returned: PASS\r\nverify NR runtime: PASS\r\n" :
+                          "[nr] RA returned: FAIL\r\nverify NR runtime: FAIL\r\n");
++  bosc_uart_exit(result == 1 ? 0 : 1);
+ }
